@@ -1,16 +1,16 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-import pymysql
+import os
+import psycopg2
 import pymysql.cursors
 
 app = Flask(__name__)
 
-# MySQL config (update with your credentials)
-db = pymysql.connect(
-    host='localhost',
-    user='root',
-    password='Reddy123@',
-    database='myapp',
-    cursorclass=pymysql.cursors.DictCursor
+conn = psycopg2.connect(
+    host=os.getenv("dpg-d1r8cremcj7s73akrs9g-a"),
+    port=os.getenv("5432"),
+    database=os.getenv("myapp_llm7"),
+    user=os.getenv("myapp_llm7_user"),
+    password=os.getenv("aGOHL6YzcMT0okNlwevJrmpjfzYCDkYa")
 )
 
 @app.route('/')
