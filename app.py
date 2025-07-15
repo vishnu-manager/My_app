@@ -40,6 +40,31 @@ def login():
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Internal server error"})
+@app.route('/admin_register', methods=['POST'])
+def admin_register():
+    data = request.get_json()
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    role = data.get("role")
+    apartment_code = data.get("apartment_code")
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+            if cursor.fetchone():
+                return jsonify({"message": "Email already registered!"}), 409
+
+            cursor.execute(
+                "INSERT INTO users (name, email, password, role, apartment_code) VALUES (%s, %s, %s, %s, %s)",
+                (name, email, password, role, apartment_code)
+            )
+            conn.commit()
+            return jsonify({"message": "Admin registered successfully!"}), 201
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Registration failed!"}), 500
+
 
 # Run the app locally
 if __name__ == '__main__':
