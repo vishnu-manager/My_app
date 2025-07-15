@@ -2,10 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Website</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apartment Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='home.css') }}">
 </head>
 <body>
-    <h1>Welcome to My Website</h1>
+
+    <div class="container">
+        <header>
+            <h1>🏢 Apartment Management System</h1>
+            <p>Manage your apartment efficiently and stay updated.</p>
+        </header>
+
+        <hr>
+
+        <!-- Login Section -->
+        <div class="login-section">
+            <h2>🔐 Secure Login</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" name="email" placeholder="Email" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <span class="toggle-password" onclick="togglePassword()">
+                        <i class="fa fa-eye"></i>
+                    </span>
+                </div>
+
+                <button type="submit" id="loginButton" class="btn">Login</button>
+                <p id="message"></p>
+            </form>
+        </div>
+
+        <!-- Create Account Section -->
+        <div class="register-section">
+            <p>Don't have an account?</p>
+            <a href="/admin_register" class="btn admin-btn">Apartment Registration</a>
+            <a href="/resident_register" class="btn resident-btn">Register as Resident</a>
+        </div>
+
+        <footer>
+            <p>© 2025 Apartment Management. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const loginButton = document.getElementById("loginButton");
+            const message = document.getElementById("message");
+
+            loginButton.disabled = true;
+            loginButton.textContent = "Logging in...";
+
+            fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loginButton.disabled = false;
+                loginButton.textContent = "Login";
+
+                if (data.redirect_url) {
+                    message.style.color = "green";
+                    message.textContent = "Login successful! Redirecting...";
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1500);
+                } else {
+                    message.style.color = "red";
+                    message.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                loginButton.disabled = false;
+                loginButton.textContent = "Login";
+                console.error("Error:", error);
+                message.style.color = "red";
+                message.textContent = "Something went wrong. Try again.";
+            });
+        });
+
+        function togglePassword() {
+            const passwordInput = document.getElementById("password");
+            passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+        }
+    </script>
+
 </body>
 </html>
