@@ -1,1 +1,79 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Resident Registration</title>
+    <link rel="stylesheet" type="text/css" href="/static/residents.css">
+</head>
+<body>
+    <div class="container">
+        <h2>🏠 Resident Registration</h2>
+
+        <form id="residentForm">
+            <div class="input-group">
+                <input type="text" id="name" placeholder="Full Name" required>
+            </div>
+
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Email" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="flat_number" placeholder="Flat Number" required>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="apartment_code" placeholder="Apartment Code" required>
+            </div>
+
+            <button type="submit" class="btn">Register as Resident</button>
+        </form>
+
+        <p id="message"></p>
+        <button onclick="window.location.href='/'" class="btn back-btn">Back to Home</button>
+    </div>
+
+    <script>
+        async function registerResident(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const flat_number = document.getElementById("flat_number").value;
+            const apartment_code = document.getElementById("apartment_code").value;
+
+            const response = await fetch("/resident_register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                    flat_number,
+                    role: "resident",
+                    apartment_code
+                })
+            });
+
+            const result = await response.json();
+            const messageElement = document.getElementById("message");
+
+            if (response.ok) {
+                messageElement.style.color = "green";
+                messageElement.textContent = result.message;
+                setTimeout(() => window.location.href = "/login_page", 2000);
+            } else {
+                messageElement.style.color = "red";
+                messageElement.textContent = result.message;
+            }
+        }
+
+        document.getElementById("residentForm").addEventListener("submit", registerResident);
+    </script>
+</body>
+</html>
