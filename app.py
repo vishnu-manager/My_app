@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import os
 import psycopg2
-import pymysql.cursors
+
 
 app = Flask(__name__)
 
