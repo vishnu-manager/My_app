@@ -40,8 +40,13 @@ def login():
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Internal server error"})
-@app.route('/admin_register', methods=['POST'])
+# ✅ Admin Register Page - GET & POST
+@app.route('/admin_register', methods=['GET', 'POST'])
 def admin_register():
+    if request.method == 'GET':
+        return render_template('admin_register.html')  # HTML file in /templates
+
+    # POST: Save admin
     data = request.get_json()
     name = data.get("name")
     email = data.get("email")
@@ -65,8 +70,14 @@ def admin_register():
         print("Error:", e)
         return jsonify({"message": "Registration failed!"}), 500
 
-@app.route('/resident_register', methods=['POST'])
+
+# ✅ Resident Register Page - GET & POST
+@app.route('/resident_register', methods=['GET', 'POST'])
 def resident_register():
+    if request.method == 'GET':
+        return render_template('resident_register.html')
+
+    # POST: Save resident
     data = request.get_json()
     name = data.get("name")
     email = data.get("email")
