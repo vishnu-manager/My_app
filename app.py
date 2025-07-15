@@ -7,9 +7,9 @@ app = Flask(__name__)
 # MySQL config (update with your credentials)
 db = pymysql.connect(
     host='localhost',
-    user='your_username',
-    password='your_password',
-    database='apartment_db',
+    user='root',
+    password='Reddy123@',
+    database='myapp',
     cursorclass=pymysql.cursors.DictCursor
 )
 
