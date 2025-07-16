@@ -116,6 +116,37 @@ def get_residents():
     except Exception as e:
         print("Error fetching residents:", e)
         return jsonify([]), 500
+@app.route('/admin_residents', methods=['GET'])
+def admin_residents():
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute("SELECT name, flat_number, email, apartment_code FROM users WHERE role = 'resident'")
+            rows = cursor.fetchall()
+            residents = [dict(row) for row in rows]
+            return render_template('admin_residents.html', residents=residents)
+    except Exception as e:
+        print("Error fetching residents:", e)
+        return "Internal Server Error", 500
+@app.route('/remove_resident', methods=['POST'])
+def remove_resident():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"success": False, "message": "Email is required."}), 400
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM users WHERE email = %s AND role = 'resident'", (email,))
+            if cursor.rowcount == 0:
+                return jsonify({"success": False, "message": "Resident not found."}), 404
+
+            conn.commit()
+            return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        print("Error deleting resident:", e)
+        return jsonify({"success": False, "message": "Internal server error."}), 500
 
 # Logout route
 @app.route('/logout')
