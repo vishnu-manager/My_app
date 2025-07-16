@@ -21,7 +21,7 @@ conn = psycopg2.connect(
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return render_template('index.html')  # Return login form
+        return render_template('login.html')  # Return login form
 
     # POST: Handle login form submission
     data = request.get_json()
