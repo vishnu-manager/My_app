@@ -137,7 +137,6 @@ def resident_register():
     if request.method == 'GET':
         return render_template('resident_register.html')
 
-    # POST: Save resident
     data = request.get_json()
     name = data.get("name")
     email = data.get("email")
@@ -148,17 +147,17 @@ def resident_register():
 
     try:
         with conn.cursor() as cursor:
-            # ✅ 1. Check if apartment code exists
+            # Check if apartment code exists
             cursor.execute("SELECT * FROM apartments WHERE apartment_code = %s", (apartment_code,))
-            if not cursor.fetchone():
+            if cursor.fetchone() is None:
                 return jsonify({"message": "Invalid apartment code!"}), 400
 
-            # ✅ 2. Check if email already exists
+            # Check if email already exists
             cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
             if cursor.fetchone():
                 return jsonify({"message": "Email already exists!"}), 409
 
-            # ✅ 3. Register the resident
+            # Insert user
             cursor.execute(
                 "INSERT INTO users (name, email, password, role, flat_number, apartment_code) VALUES (%s, %s, %s, %s, %s, %s)",
                 (name, email, password, role, flat_number, apartment_code)
@@ -167,8 +166,10 @@ def resident_register():
             return jsonify({"message": "Resident registered successfully!"}), 201
 
     except Exception as e:
+        conn.rollback()  # ✅ properly indented
         print("Error:", e)
         return jsonify({"message": "Internal server error!"}), 500
+
 @app.route('/resident_dashboard')
 def resident_dashboard():
     # Check login session
