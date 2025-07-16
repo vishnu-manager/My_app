@@ -218,9 +218,9 @@ def resident_dashboard():
             return render_template("resident_dashboard.html", resident=resident, maintainers=maintainers)
 
     except Exception as e:
-    conn.rollback()  # <- ADD THIS
-    print("Error:", e)
-    return jsonify({"message": "Internal server error!"}), 500
+       conn.rollback()  # <- ADD THIS
+       print("Error:", e)
+       return jsonify({"message": "Internal server error!"}), 500
 
 # Root
 @app.route('/')
