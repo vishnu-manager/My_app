@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Dashboard</title>
+    <link rel="stylesheet" href="/static/resident.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="welcome-text">Welcome, {{ resident.name }}! 😊</h2>
+
+ <!-- Resident Details -->
+<div class="resident-details">
+    <p><strong>Email:</strong> {{ resident.email }}</p>
+    <p><strong>Apartment Code:</strong> {{ resident.apartment_code }}</p>
+    <p><strong>Flat Number:</strong> {{ resident.flat_number }}</p>
+</div>
+        <hr>
+
+        <!-- Link to Maintenance Page -->
+        <h3>Maintenance</h3>
+        <a href="{{ url_for('maintenance_page') }}" class="btn btn-primary">View Maintenance Records</a>
+        <a href="{{ url_for('complaints_page') }}" class="btn btn-primary">Add Complaint</a>
+
+        <hr>
+
+        <!-- Maintainers Section -->
+        <h3>Maintenance Team:</h3>
+        <ul id="maintainersList" class="list-group">
+            {% if maintainers %}
+                {% for maintainer in maintainers %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                       <div>
+                            <strong>Name: {{ maintainer.name }}</strong>
+                            <span>Contact: {{ maintainer.contact }}</span>
+                            <span>Job Title: {{ maintainer.job_title }}</span>
+                        </div>
+                        <button class="image-button" onclick="callMaintainer('{{ maintainer.contact }}')">
+                            <img src="/static/call_icon.png" alt="Call Maintainer" class="call-icon">
+                        </button>
+                    </li>
+                
+                {% endfor %}
+            {% else %}
+                <p id="noMaintainersMessage">No maintainers available for your apartment.</p>
+            {% endif %}
+        </ul>
+
+
+        <div class="logout">
+            <a href="{{ url_for('logout') }}" class="btn btn-warning">Logout</a>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function callMaintainer(contact) {
+            window.location.href = "tel:" + contact;
+        }
+    </script>
+</body>
+</html>
