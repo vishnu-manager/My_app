@@ -14,9 +14,7 @@ conn = psycopg2.connect(
     password=os.getenv("DB_PASSWORD", "Vj2NZiDD7hd61b7KFz3iC5xZtCpZaaVY")
 )
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+
 
 @app.route('/login', methods=['POST'])
 def login():
