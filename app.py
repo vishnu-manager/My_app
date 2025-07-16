@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+
 import os
 import psycopg2
 import psycopg2.extras
@@ -149,7 +150,8 @@ def get_residents():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('home'))
+    return render_template('index.html')  # Or replace 'home' with your login or landing page route
+
 
 
 # Root
