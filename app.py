@@ -169,7 +169,56 @@ def resident_register():
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Internal server error!"}), 500
+@app.route('/resident_dashboard')
+def resident_dashboard():
+    # Check login session
+    if 'user_id' not in session or session.get('role') != 'resident':
+        return redirect(url_for('login'))
 
+    user_id = session['user_id']
+
+    try:
+        with conn.cursor() as cursor:
+            # ✅ Fetch resident info
+            cursor.execute("""
+                SELECT name, email, flat_number, apartment_code 
+                FROM users 
+                WHERE id = %s
+            """, (user_id,))
+            user_row = cursor.fetchone()
+
+            if not user_row:
+                return redirect(url_for('login'))
+
+            resident = {
+                "name": user_row[0],
+                "email": user_row[1],
+                "flat_number": user_row[2],
+                "apartment_code": user_row[3]
+            }
+
+            # ✅ Fetch maintainers for this apartment code
+            cursor.execute("""
+                SELECT name, contact, job_title 
+                FROM maintainers 
+                WHERE apartment_code = %s
+            """, (resident["apartment_code"],))
+            maintainer_rows = cursor.fetchall()
+
+            maintainers = []
+            for row in maintainer_rows:
+                maintainers.append({
+                    "name": row[0],
+                    "contact": row[1],
+                    "job_title": row[2]
+                })
+
+            # ✅ Render dashboard
+            return render_template("resident_dashboard.html", resident=resident, maintainers=maintainers)
+
+    except Exception as e:
+        print("Error loading resident dashboard:", e)
+        return "Internal Server Error", 500
 # Root
 @app.route('/')
 def home():
