@@ -65,8 +65,10 @@ def admin_register():
                 (name, email, password, role, apartment_code)
             )
             conn.commit()
-            return jsonify({"message": "Admin registered successfully!"}), 201
-            "redirect_url": "/"
+            return jsonify({
+                "message": "Admin registered successfully!",
+                "redirect_url": "/"
+            }), 201
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Registration failed!"}), 500
