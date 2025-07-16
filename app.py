@@ -66,6 +66,7 @@ def admin_register():
             )
             conn.commit()
             return jsonify({"message": "Admin registered successfully!"}), 201
+            "redirect_url": "/"
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Registration failed!"}), 500
