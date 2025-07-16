@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Database connection
 conn = psycopg2.connect(
-    host=os.getenv("DB_HOST", "dpg-d1r8cremcj7s73akrs9g-a"),
+    host=os.getenv("DB_HOST", "dpg-d1rnu3p5pdvs73ebrbig-a"),
     port=os.getenv("DB_PORT", "5432"),
-    database=os.getenv("DB_NAME", "myapp_llm7"),
-    user=os.getenv("DB_USER", "myapp_llm7_user"),
-    password=os.getenv("DB_PASSWORD", "aGOHL6YzcMT0okNlwevJrmpjfzYCDkYa")
+    database=os.getenv("DB_NAME", "myapp123"),
+    user=os.getenv("DB_USER", "vishnu123"),
+    password=os.getenv("DB_PASSWORD", "Vj2NZiDD7hd61b7KFz3iC5xZtCpZaaVY")
 )
 
 @app.route('/')
