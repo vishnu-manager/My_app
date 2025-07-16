@@ -101,6 +101,50 @@ def resident_register():
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Internal server error!"}), 500
+# Admin dashboard
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT name, contact FROM maintainers")
+            maintainers = cursor.fetchall()
+            maintainers = [{'name': m[0], 'contact': m[1]} for m in maintainers]
+        return render_template('admin_dashboard.html', maintainers=maintainers)
+    except Exception as e:
+        print("Error:", e)
+        return "Error loading dashboard"
+
+# Add maintainer
+@app.route('/add_maintainer', methods=['POST'])
+def add_maintainer():
+    data = request.get_json()
+    name = data.get("name")
+    contact = data.get("contact")
+    job_title = data.get("job_title")
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO maintainers (name, contact, job_title) VALUES (%s, %s, %s)",
+                (name, contact, job_title)
+            )
+            conn.commit()
+        return jsonify({"message": "Maintainer added successfully!"})
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Error adding maintainer!"}), 500
+
+# Logout route
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
+
+
+# Root
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 # Run the app locally
 if __name__ == '__main__':
