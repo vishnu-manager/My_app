@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Records</title>
+    <link rel="stylesheet" href="/static/admin_maintenance.css">
+</head>
+<body>
+
+<div class="container">
+    <button class="back-button" onclick="goBack()">⬅ Go Back</button>
+    <h1>Maintenance Payments</h1>
+
+    <label for="monthFilter">Select Month:</label>
+    <select id="monthFilter" onchange="loadResidents()">
+        <option value="all">All</option>
+        <option value="01">January</option>
+        <option value="02">February</option>
+        <option value="03">March</option>
+        <option value="04">April</option>
+        <option value="05">May</option>
+        <option value="06">June</option>
+        <option value="07">July</option>
+        <option value="08">August</option>
+        <option value="09">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+    </select>
+
+    <label for="yearFilter">Select Year:</label>
+    <select id="yearFilter" onchange="loadResidents()">
+        <option value="all">All</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+    </select>
+
+    <h3>Maintenance Records</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Resident Name</th>
+                <th>Flat No</th>
+                <th>Amount</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="maintenanceTable">
+            <!-- Records will be added dynamically -->
+        </tbody>
+    </table>
+
+    <h3>Total Amount Collected: ₹<span id="totalAmount">0</span></h3>
+</div>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+
+    async function loadResidents() {
+        const monthFilter = document.getElementById("monthFilter").value;
+        const yearFilter = document.getElementById("yearFilter").value;
+
+        try {
+            const residentResponse = await fetch("/get_residents");
+            const residents = await residentResponse.json();
+
+            const maintenanceResponse = await fetch(`/get_maintenance?month=${monthFilter}&year=${yearFilter}`);
+            const maintenanceData = await maintenanceResponse.json();
+
+            console.log("Fetched Maintenance Data:", maintenanceData);
+
+            let tableBody = document.getElementById("maintenanceTable");
+            tableBody.innerHTML = "";
+
+            let totalAmount = maintenanceData.total_collected || 0;
+
+            residents.forEach(resident => {
+                let paidRecord = maintenanceData.records.find(record => 
+                    record.flat_number === resident.flat_number &&
+                    record.apartment_code === resident.apartment_code &&
+                    record.month === monthFilter &&
+                    record.year === yearFilter
+                );
+
+                let row = `
+                    <tr id="row_${resident.flat_number}_${resident.apartment_code}">
+                        <td>${resident.name}</td>
+                        <td>${resident.flat_number}</td>
+                        <td id="amountCell_${resident.flat_number}_${resident.apartment_code}">
+                            ${paidRecord && paidRecord.status === "Paid" 
+                                ? `<span style='color: green; font-weight: bold;'>₹${paidRecord.amount_paid}</span>` 
+                                : `<input type="number" id="amount_${resident.flat_number}_${resident.apartment_code}" placeholder="Enter Amount" required>`}
+                        </td>
+                        <td id="actionCell_${resident.flat_number}_${resident.apartment_code}">
+                            ${paidRecord && paidRecord.status === "Paid"
+                                ? "<span style='color: green; font-weight: bold;'>Paid</span>"
+                                : `<button id="submitBtn_${resident.flat_number}_${resident.apartment_code}" onclick="submitPayment('${resident.name}', '${resident.flat_number}', '${resident.apartment_code}')">Submit</button>`}
+                        </td>
+                    </tr>
+                `;
+
+                tableBody.innerHTML += row;
+            });
+
+            document.getElementById("totalAmount").innerText = `${totalAmount}`;
+
+        } catch (error) {
+            console.error("Error loading residents:", error);
+        }
+    }
+
+    async function submitPayment(residentName, flatNumber, apartmentCode) {
+        let amountInput = document.getElementById(`amount_${flatNumber}_${apartmentCode}`);
+        let amount = amountInput ? amountInput.value : null;
+
+        if (!amount) {
+            alert("Please enter an amount.");
+            return;
+        }
+
+        let month = document.getElementById("monthFilter").value;
+        let year = document.getElementById("yearFilter").value;
+
+        if (month === "all" || year === "all") {
+            alert("Please select a valid month and year before submitting payment.");
+            return;
+        }
+
+        try {
+            const response = await fetch("/add_maintenance", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: residentName,  
+                    flat_number: flatNumber,
+                    apartment_code: apartmentCode,
+                    amount_paid: amount,
+                    month: month,  
+                    year: year
+                })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+
+            loadResidents();  
+
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    loadResidents();
+</script>
+
+</body>
+</html>
