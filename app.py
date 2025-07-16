@@ -73,36 +73,7 @@ def admin_register():
         return jsonify({"message": "Registration failed!"}), 500
 
 
-# ✅ Resident Register Page - GET & POST
-@app.route('/resident_register', methods=['GET', 'POST'])
-def resident_register():
-    if request.method == 'GET':
-        return render_template('resident_register.html')
 
-    # POST: Save resident
-    data = request.get_json()
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
-    flat_number = data.get("flat_number")
-    role = data.get("role")
-    apartment_code = data.get("apartment_code")
-
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-            if cursor.fetchone():
-                return jsonify({"message": "Email already exists!"}), 409
-
-            cursor.execute(
-                "INSERT INTO users (name, email, password, role, flat_number, apartment_code) VALUES (%s, %s, %s, %s, %s, %s)",
-                (name, email, password, role, flat_number, apartment_code)
-            )
-            conn.commit()
-            return jsonify({"message": "Resident registered successfully!"}), 201
-    except Exception as e:
-        print("Error:", e)
-        return jsonify({"message": "Internal server error!"}), 500
 # Admin dashboard
 @app.route('/admin_dashboard')
 def admin_dashboard():
@@ -153,6 +124,51 @@ def logout():
     return render_template('index.html')  # Or replace 'home' with your login or landing page route
 
 
+
+
+
+
+
+
+
+# ✅ Resident Register Page - GET & POST
+@app.route('/resident_register', methods=['GET', 'POST'])
+def resident_register():
+    if request.method == 'GET':
+        return render_template('resident_register.html')
+
+    # POST: Save resident
+    data = request.get_json()
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    flat_number = data.get("flat_number")
+    role = data.get("role")
+    apartment_code = data.get("apartment_code")
+
+    try:
+        with conn.cursor() as cursor:
+            # ✅ 1. Check if apartment code exists
+            cursor.execute("SELECT * FROM apartments WHERE apartment_code = %s", (apartment_code,))
+            if not cursor.fetchone():
+                return jsonify({"message": "Invalid apartment code!"}), 400
+
+            # ✅ 2. Check if email already exists
+            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+            if cursor.fetchone():
+                return jsonify({"message": "Email already exists!"}), 409
+
+            # ✅ 3. Register the resident
+            cursor.execute(
+                "INSERT INTO users (name, email, password, role, flat_number, apartment_code) VALUES (%s, %s, %s, %s, %s, %s)",
+                (name, email, password, role, flat_number, apartment_code)
+            )
+            conn.commit()
+            return jsonify({"message": "Resident registered successfully!"}), 201
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal server error!"}), 500
 
 # Root
 @app.route('/')
