@@ -134,6 +134,16 @@ def add_maintainer():
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Error adding maintainer!"}), 500
+@app.route('/get_residents', methods=['GET'])
+def get_residents():
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("SELECT name, flat_number, apartment_code FROM users WHERE role = 'resident'")
+            residents = cursor.fetchall()
+            return jsonify(residents)
+    except Exception as e:
+        print("Error fetching residents:", e)
+        return jsonify([]), 500
 
 # Logout route
 @app.route('/logout')
