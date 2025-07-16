@@ -5,6 +5,7 @@ import os
 
 
 app = Flask(__name__)
+app.secret_key = "supersecretkey"
 
 # Database connection
 conn = psycopg2.connect(
