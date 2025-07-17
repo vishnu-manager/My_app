@@ -16,32 +16,39 @@ conn = psycopg2.connect(
 )
 
 
-cursor = conn.cursor()
+return conn
 # Route for home page (login)
 @app.route("/")
 def home():
     return render_template("home.html")
 
 # Login route
-@app.route("/login", methods=["POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
 
-    cur.execute("SELECT role FROM users WHERE email=%s AND password=%s", (email, password))
-    result = cur.fetchone()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    if result:
-        role = result[0]
-        session["user"] = email
-        session["role"] = role
-        if role == "admin":
-            return jsonify({"redirect_url": "/admin_dashboard"})
+        cur.execute("SELECT role FROM users WHERE email=%s AND password=%s", (email, password))
+        user = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if user:
+            session['email'] = email
+            session['role'] = user[0]
+            if user[0] == 'admin':
+                return redirect('/admin_dashboard')
+            else:
+                return redirect('/resident_dashboard')
         else:
-            return jsonify({"redirect_url": "/resident_dashboard"})
-    else:
-        return jsonify({"message": "Invalid email or password."})
+            return "Invalid credentials"
+
+    return render_template('login.html')
 
 # Admin registration page
 @app.route("/admin_register")
