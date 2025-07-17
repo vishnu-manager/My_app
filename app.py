@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
+
+
 import psycopg2
 import os
 
