@@ -18,104 +18,76 @@ conn = psycopg2.connect(
 
 cursor = conn.cursor()
 
-@app.route('/')
-def home():
-    return redirect('/login')
+# Login Page Route
+@app.route("/login_page")
+def login_page():
+    return render_template("home.html")
 
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        cursor.execute("SELECT role, username FROM users WHERE email=%s AND password=%s", (email, password))
-        result = cursor.fetchone()
-
-        if result:
-            session['username'] = result[1]
-            session['role'] = result[0]
-            return redirect('/dashboard')
-        else:
-            return render_template('login.html', error="Invalid credentials")
-    return render_template("login.html")
-
-
-@app.route('/dashboard')
-def dashboard():
-    if 'role' in session:
-        if session['role'] == 'admin':
-            return redirect("/admin_dashboard")
-        else:
-            return render_template('resident_dashboard.html')
-    return redirect('/login')
-
-
-@app.route("/admin_dashboard")
+# Admin Dashboard Route
+@app.route("/admin_dashboard", methods=["GET", "POST"])
 def admin_dashboard():
-    if "role" in session and session["role"] == "admin":
-        cursor.execute("SELECT name, contact FROM maintainers")
-        maintainers = cursor.fetchall()
-        return render_template("admin_dashboard.html", maintainers=[{'name': m[0], 'contact': m[1]} for m in maintainers])
-    return redirect("/login")
+    if "user" not in session or session["role"] != "admin":
+        return redirect("/login_page")
 
+    apartment_code = session.get("apartment_code")
 
-@app.route("/add_maintainer", methods=["POST"])
-def add_maintainer():
-    name = request.form.get("name")
-    contact = request.form.get("contact")
-    job_title = request.form.get("job_title")
+    # Fetch apartment details
+    cursor.execute("SELECT * FROM apartments WHERE code = %s", (apartment_code,))
+    apartment = cursor.fetchone()
 
-    try:
-        cursor.execute("INSERT INTO maintainers (name, contact, job_title) VALUES (%s, %s, %s)",
-                       (name, contact, job_title))
-        conn.commit()
+    # Fetch residents
+    cursor.execute("SELECT * FROM users WHERE role = 'resident' AND apartment_code = %s", (apartment_code,))
+    residents = cursor.fetchall()
+
+    # Fetch maintainers
+    cursor.execute("SELECT * FROM maintainers WHERE apartment_code = %s", (apartment_code,))
+    maintainers = cursor.fetchall()
+
+    # Fetch maintenance records
+    cursor.execute("SELECT * FROM maintenance WHERE apartment_code = %s", (apartment_code,))
+    maintenance_records = cursor.fetchall()
+
+    # Handle Form Submissions
+    if request.method == "POST":
+        form_type = request.form.get("form_type")
+
+        if form_type == "add_maintainer":
+            maintainer_name = request.form["maintainer_name"]
+            maintainer_contact = request.form["maintainer_contact"]
+
+            try:
+                cursor.execute(
+                    "INSERT INTO maintainers (name, contact, apartment_code) VALUES (%s, %s, %s)",
+                    (maintainer_name, maintainer_contact, apartment_code)
+                )
+                conn.commit()
+            except Exception as e:
+                print("Error adding maintainer:", e)
+
+        elif form_type == "add_maintenance":
+            resident_name = request.form["resident_name"]
+            flat_number = request.form["flat_number"]
+            amount = request.form["amount"]
+
+            try:
+                cursor.execute(
+                    "INSERT INTO maintenance (resident_name, flat_number, amount_paid, apartment_code) VALUES (%s, %s, %s, %s)",
+                    (resident_name, flat_number, amount, apartment_code)
+                )
+                conn.commit()
+            except Exception as e:
+                print("Error adding maintenance record:", e)
+
         return redirect("/admin_dashboard")
-    except Exception as e:
-        return jsonify({"message": str(e)})
 
-
-@app.route("/upload_image", methods=["POST"])
-def upload_image():
-    if "image" not in request.files:
-        return "No image part", 400
-
-    file = request.files["image"]
-    if file.filename == "":
-        return "No selected file", 400
-
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
-    return redirect("/admin_dashboard")
-
-
-@app.route("/remove_resident", methods=["POST"])
-def remove_resident():
-    email = request.form.get("email")
-    try:
-        cursor.execute("DELETE FROM residents WHERE email = %s", (email,))
-        conn.commit()
-        return redirect("/admin_dashboard")
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-
-
-@app.route("/add_complaint", methods=["POST"])
-def add_complaint():
-    complaint = request.form.get("complaint")
-    try:
-        cursor.execute("INSERT INTO complaints (text) VALUES (%s)", (complaint,))
-        conn.commit()
-        return jsonify({"message": "Complaint submitted successfully!"})
-    except Exception as e:
-        return jsonify({"message": str(e)})
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/login")
-
+    return render_template(
+        "admin_dashboard.html",
+        apartment=apartment,
+        residents=residents,
+        maintainers=maintainers,
+        maintenance_records=maintenance_records
+    )
 
 
 if __name__ == '__main__':
