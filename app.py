@@ -7,13 +7,15 @@ app.secret_key = "apartment_secret"
 
 
 # Database connection
-conn = psycopg2.connect(
-    host=os.getenv("DB_HOST", "dpg-d1rnu3p5pdvs73ebrbig-a"),
-    port=os.getenv("DB_PORT", "5432"),
-    database=os.getenv("DB_NAME", "myapp123"),
-    user=os.getenv("DB_USER", "vishnu123"),
-    password=os.getenv("DB_PASSWORD", "Vj2NZiDD7hd61b7KFz3iC5xZtCpZaaVY")
-)
+def get_db_connection():
+  conn = psycopg2.connect(
+     host=os.getenv("DB_HOST", "dpg-d1rnu3p5pdvs73ebrbig-a"),
+     port=os.getenv("DB_PORT", "5432"),
+     database=os.getenv("DB_NAME", "myapp123"),
+     user=os.getenv("DB_USER", "vishnu123"),
+     password=os.getenv("DB_PASSWORD", "Vj2NZiDD7hd61b7KFz3iC5xZtCpZaaVY")
+  )
+  return conn   
  
 # Route for home page (login)
 @app.route("/")
