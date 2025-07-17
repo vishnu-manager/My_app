@@ -17,85 +17,56 @@ conn = psycopg2.connect(
 
 
 cursor = conn.cursor()
+# Route for home page (login)
 @app.route("/")
 def home():
-    return redirect("/login_page")  # or render_template("home.html")
-
-@app.route("/login")
-def login_redirect():
-    return redirect("/login_page")
-# Login Page Route
-@app.route("/login_page")
-def login_page():
     return render_template("home.html")
 
+# Login route
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
 
-# Admin Dashboard Route
-@app.route("/admin_dashboard", methods=["GET", "POST"])
+    cur.execute("SELECT role FROM users WHERE email=%s AND password=%s", (email, password))
+    result = cur.fetchone()
+
+    if result:
+        role = result[0]
+        session["user"] = email
+        session["role"] = role
+        if role == "admin":
+            return jsonify({"redirect_url": "/admin_dashboard"})
+        else:
+            return jsonify({"redirect_url": "/resident_dashboard"})
+    else:
+        return jsonify({"message": "Invalid email or password."})
+
+# Admin registration page
+@app.route("/admin_register")
+def admin_register():
+    return render_template("admin_register.html")
+
+# Resident registration page
+@app.route("/resident_register")
+def resident_register():
+    return render_template("resident_register.html")
+
+# Admin Dashboard
+@app.route("/admin_dashboard")
 def admin_dashboard():
     if "user" not in session or session["role"] != "admin":
-        return redirect("/login_page")
+        return redirect("/")
+    return render_template("admin_dashboard.html")
 
-    apartment_code = session.get("apartment_code")
+# Resident Dashboard
+@app.route("/resident_dashboard")
+def resident_dashboard():
+    if "user" not in session or session["role"] != "resident":
+        return redirect("/")
+    return render_template("resident_dashboard.html")
 
-    # Fetch apartment details
-    cursor.execute("SELECT * FROM apartments WHERE code = %s", (apartment_code,))
-    apartment = cursor.fetchone()
-
-    # Fetch residents
-    cursor.execute("SELECT * FROM users WHERE role = 'resident' AND apartment_code = %s", (apartment_code,))
-    residents = cursor.fetchall()
-
-    # Fetch maintainers
-    cursor.execute("SELECT * FROM maintainers WHERE apartment_code = %s", (apartment_code,))
-    maintainers = cursor.fetchall()
-
-    # Fetch maintenance records
-    cursor.execute("SELECT * FROM maintenance WHERE apartment_code = %s", (apartment_code,))
-    maintenance_records = cursor.fetchall()
-
-    # Handle Form Submissions
-    if request.method == "POST":
-        form_type = request.form.get("form_type")
-
-        if form_type == "add_maintainer":
-            maintainer_name = request.form["maintainer_name"]
-            maintainer_contact = request.form["maintainer_contact"]
-
-            try:
-                cursor.execute(
-                    "INSERT INTO maintainers (name, contact, apartment_code) VALUES (%s, %s, %s)",
-                    (maintainer_name, maintainer_contact, apartment_code)
-                )
-                conn.commit()
-            except Exception as e:
-                print("Error adding maintainer:", e)
-
-        elif form_type == "add_maintenance":
-            resident_name = request.form["resident_name"]
-            flat_number = request.form["flat_number"]
-            amount = request.form["amount"]
-
-            try:
-                cursor.execute(
-                    "INSERT INTO maintenance (resident_name, flat_number, amount_paid, apartment_code) VALUES (%s, %s, %s, %s)",
-                    (resident_name, flat_number, amount, apartment_code)
-                )
-                conn.commit()
-            except Exception as e:
-                print("Error adding maintenance record:", e)
-
-        return redirect("/admin_dashboard")
-
-    return render_template(
-        "admin_dashboard.html",
-        apartment=apartment,
-        residents=residents,
-        maintainers=maintainers,
-        maintenance_records=maintenance_records
-    )
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
 
