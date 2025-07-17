@@ -20,33 +20,29 @@ conn = psycopg2.connect(
 def home():
     return render_template("home.html")
 
-# Login route
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["POST"])
 def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        cur.execute("SELECT role FROM users WHERE email=%s AND password=%s", (email, password))
-        user = cur.fetchone()
+    cur.execute("SELECT * FROM users WHERE email = %s AND password = %s", (email, password))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
 
-        cur.close()
-        conn.close()
-
-        if user:
-            session['email'] = email
-            session['role'] = user[0]
-            if user[0] == 'admin':
-                return redirect('/admin_dashboard')
-            else:
-                return redirect('/resident_dashboard')
+    if user:
+        session["user_id"] = user[0]
+        session["role"] = user[3]  # Assuming role is at index 3
+        if user[3] == "admin":
+            return jsonify({"redirect_url": "/admin_dashboard"})
         else:
-            return "Invalid credentials"
-
-    return render_template('login.html')
+            return jsonify({"redirect_url": "/resident_dashboard"})
+    else:
+        return jsonify({"message": "Invalid email or password"}), 401
 
 # Admin registration page
 @app.route("/admin_register")
