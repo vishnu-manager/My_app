@@ -111,10 +111,7 @@ def logout():
     session.clear()
     return redirect("/login")
 
-# Login Dummy Page
-@app.route("/login")
-def login():
-    return "Login Page Placeholder"
+
 
 if __name__ == '__main__':
     app.run(debug=True)
