@@ -17,7 +17,13 @@ conn = psycopg2.connect(
 
 
 cursor = conn.cursor()
+@app.route("/")
+def home():
+    return redirect("/login_page")  # or render_template("home.html")
 
+@app.route("/login")
+def login_redirect():
+    return redirect("/login_page")
 # Login Page Route
 @app.route("/login_page")
 def login_page():
